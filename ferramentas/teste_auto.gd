@@ -25,6 +25,28 @@ func _ready() -> void:
 	await _print("02_fazenda")
 	var m: Mapa = P.mapa
 	_checar(m.w == 60, "fazenda tem 60 de largura")
+	# andar com o teclado
+	var x0: float = P.jogador.position.x
+	Input.action_press("direita")
+	await _quadros(30)
+	Input.action_release("direita")
+	_checar(P.jogador.position.x > x0 + 10, "anda com o teclado")
+	P.jogador.position = m.centro(Vector2i(11, 8)) + Vector2(0, 12)
+	Input.action_press("cima")
+	await _quadros(40)
+	Input.action_release("cima")
+	_checar(P.mapa.nome == "casa", "entra em casa pela porta")
+	Input.action_press("baixo")
+	await _quadros(60)
+	Input.action_release("baixo")
+	_checar(P.mapa.nome == "fazenda", "sai de casa pela porta")
+	# não atravessa a casa
+	m = P.mapa
+	P.jogador.position = m.centro(Vector2i(9, 9)) + Vector2(0, 12)
+	Input.action_press("cima")
+	await _quadros(40)
+	Input.action_release("cima")
+	_checar(P.jogador.position.y > 7 * 32, "parede da casa bloqueia")
 	# arar, plantar, regar, crescer
 	var c := Vector2i(12, 12)
 	m.remover_objeto(c)
@@ -197,6 +219,23 @@ func _ready() -> void:
 	Jogo.clima = "neve"
 	await _quadros(10)
 	await _print("17_inverno")
+	# dormir pela cama
+	P.ir_para("casa", Vector2i(3, 5))
+	await _quadros(3)
+	var dia_antes := Jogo.dia
+	Acoes.interagir(P, P.mapa, Vector2i(2, 3))
+	await _quadros(2)
+	for n in P.ui.find_children("*", "Button", true, false):
+		if n.text == "Sim":
+			n.pressed.emit()
+			break
+	await _quadros(2)
+	await _print("18_relatorio")
+	for i in 10:
+		if P.ui.call("menu_aberto"):
+			P.ui.call("fechar")
+			await _quadros(1)
+	_checar(Jogo.dia != dia_antes and not Jogo.pausado, "dormir passa o dia")
 	# salvar e carregar
 	Jogo.salvar()
 	var dinheiro_salvo := Jogo.dinheiro

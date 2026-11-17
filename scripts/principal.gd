@@ -303,6 +303,7 @@ func _ao_mudar_hora() -> void:
 func dormir() -> void:
 	Jogo.pausado = true
 	var rel := Jogo.passar_dia("")
+	hud.call("atualizar")
 	ui.call("mostrar_relatorio", rel, _comecar_dia)
 
 func _desmaiou(motivo: String) -> void:

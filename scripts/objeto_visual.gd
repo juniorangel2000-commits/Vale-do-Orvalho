@@ -101,7 +101,7 @@ func _draw() -> void:
 				pronto = int(Jogo.construcao_por_id(mapa.construcao_id).get("cocho", 0)) > 0
 			if tipo == "mural":
 				pronto = not Jogo.pedido.is_empty()
-			Desenho.objeto_colocavel(self, tipo, desloc, 28.0, pronto, trabalhando)
+			Desenho.objeto_colocavel(self, tipo, desloc, 40.0 if tipo == "caixa_envio" else 28.0, pronto, trabalhando)
 			if pronto and o.has("saida"):
 				Desenho.icone(self, String(o.saida), Rect2(Vector2(-6, -44), Vector2(12, 12)), String(o.get("origem", "")))
 		_:

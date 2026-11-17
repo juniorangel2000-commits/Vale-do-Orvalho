@@ -28,7 +28,7 @@ func _draw() -> void:
 					cor = Color(1.15, 0.95, 0.7)
 				draw_texture_rect_region(tex, r, origem, cor)
 				if inverno and m != Mapa.M.TERRA and m != Mapa.M.ESTRADA and m != Mapa.M.ESTRADA_UMIDA:
-					draw_rect(r, Color(1, 1, 1, 0.35))
+					draw_rect(r, Color(0.95, 0.97, 1.0, 0.55))
 			elif m == Mapa.M.PISO:
 				draw_rect(r, Color("#9a6a42"))
 				draw_line(Vector2(r.position.x, r.position.y + 15), Vector2(r.end.x, r.position.y + 15), Color("#7a4e2e"), 1)

@@ -396,7 +396,7 @@ static func _interagir_objeto(P: Node, m: Mapa, c: Vector2i, o: Dictionary) -> b
 				Jogo.flags["premio_mina"] = true
 			return true
 		"cama":
-			P.ui.confirmar("Dormir e terminar o dia?", P.dormir)
+			P.ui.confirmar("Dormir e terminar o dia?", Callable(P, "dormir"))
 			return true
 		"fogao":
 			P.ui.abrir_cozinha()
