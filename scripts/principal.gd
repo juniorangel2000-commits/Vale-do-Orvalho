@@ -21,6 +21,9 @@ var escada_achada := false
 var pedras_quebradas := 0
 var _mapa_atual := ""
 var construindo := ""
+var cursor: Node2D
+var _usando_mouse := false
+var _alvo_cursor := Vector2i.ZERO
 var _fantasma: Node2D
 
 func _ready() -> void:
@@ -137,6 +140,12 @@ func ir_para(destino: String, entrada: Vector2i, extra := {}) -> void:
 	RenderingServer.set_default_clear_color(Color("#140e0c"))
 	camera.global_position = jogador.global_position
 	camera.reset_smoothing()
+	cursor = Node2D.new()
+	cursor.z_index = 30
+	cursor.draw.connect(func():
+		cursor.draw_rect(Rect2(1, 1, Mapa.T - 2, Mapa.T - 2), Color(1, 1, 1, 0.55), false, 2.0)
+		cursor.draw_rect(Rect2(3, 3, Mapa.T - 6, Mapa.T - 6), Color(1, 1, 1, 0.08)))
+	mapa.add_child(cursor)
 	_montar_astar()
 	_atualizar_luz()
 	_atualizar_npcs(true)
@@ -195,6 +204,18 @@ func ao_mover() -> void:
 func _process(_delta: float) -> void:
 	if jogador and jogador.is_inside_tree():
 		camera.global_position = jogador.global_position
+	if cursor and is_instance_valid(cursor) and mapa:
+		var s = Jogo.selecionado() if Jogo.em_partida else null
+		var mostra := s != null and not Jogo.pausado and construindo == ""
+		if mostra:
+			var tipo: String = Dados.item(s.id).tipo
+			mostra = tipo == "ferramenta" or tipo == "semente" or tipo == "muda" or bool(Dados.item(s.id).get("colocavel", false)) or s.id == "fertilizante"
+		cursor.visible = mostra
+		if mostra:
+			var alvo := _alvo_mouse() if _usando_mouse else jogador.celula_alvo()
+			cursor.position = Vector2(alvo * Mapa.T)
+	if Jogo.em_partida and Engine.get_process_frames() % 30 == 0:
+		_checar_objetivo()
 	if mapa and Engine.get_process_frames() % 20 == 0:
 		_atualizar_luz()
 
@@ -220,6 +241,13 @@ func _unhandled_input(ev: InputEvent) -> void:
 	if ev.is_action_pressed("social"):
 		ui.call("abrir_inventario", "social")
 		return
+	if ev.is_action_pressed("mapa"):
+		ui.call("abrir_mapa")
+		return
+	if ev is InputEventMouseMotion:
+		_usando_mouse = true
+	elif ev is InputEventKey and (ev.is_action_pressed("cima") or ev.is_action_pressed("baixo") or ev.is_action_pressed("esquerda") or ev.is_action_pressed("direita")):
+		_usando_mouse = false
 	for i in 12:
 		if ev.is_action_pressed("slot%d" % i):
 			Jogo.slot = i
@@ -409,6 +437,20 @@ func falar(id: String) -> void:
 	conversar(id)
 
 func conversar(id: String) -> void:
+	for n in [3, 6]:
+		var chave := "evento_%s_%d" % [id, n]
+		if Jogo.coracoes(id) >= n and not Jogo.flags.has(chave) and Dados.eventos.has(id):
+			Jogo.flags[chave] = true
+			Jogo.conversou_hoje[id] = true
+			Jogo.mudar_amizade(id, 100)
+			if id == "nonato" and n == 3:
+				Jogo.adicionar("dourado", 1)
+			elif id == "celeste" and n == 6:
+				Jogo.adicionar("fertilizante", 10)
+			elif id == "bento" and n == 6:
+				Jogo.adicionar("barra_ferro", 5)
+			_cena(id, Dados.eventos[id][n], 0)
+			return
 	var d: Dictionary = Dados.aldeoes[id]
 	var falas: Dictionary = d.falas
 	var opcoes: Array = Array(falas.geral).duplicate()
@@ -435,6 +477,60 @@ func conversar(id: String) -> void:
 		Jogo.conversou_hoje[id] = true
 		Jogo.mudar_amizade(id, 20)
 	ui.call("mostrar_dialogo", id, texto)
+
+func _cena(id: String, linhas: Array, i: int) -> void:
+	if i >= linhas.size():
+		return
+	var proxima := Callable()
+	if i + 1 < linhas.size():
+		proxima = func(): _cena(id, linhas, i + 1)
+	ui.call("mostrar_dialogo", id, String(linhas[i]), proxima)
+
+# ---------------------------------------------------------------- objetivos do começo
+
+const OBJETIVOS := [
+	"Escolha a enxada (tecla 1) e clique na grama perto de casa para arar a terra.",
+	"Escolha as sementes de alface (tecla 8) e plante na terra arada.",
+	"Regue as sementes com o regador (tecla 2). Encha no poço ou no lago quando esvaziar.",
+	"Junte material: corte galhos com o machado (3) ou quebre pedras com a picareta (4).",
+	"Siga a estrada para a direita até a vila. O Armazém vende mais sementes.",
+	"Converse com alguém da vila (clique direito ou F perto da pessoa).",
+	"Coloque algo para vender na caixa de madeira ao lado da sua casa.",
+	"Quando cansar, durma na sua cama: o dia termina e o jogo é salvo.",
+]
+
+func _checar_objetivo() -> void:
+	if Jogo.flags.has("objetivos_fim"):
+		hud.call("mostrar_objetivo", "")
+		return
+	var etapa := int(Jogo.flags.get("objetivo", 0))
+	var feito := false
+	var faz: Dictionary = Jogo.estado_mapa("fazenda")
+	match etapa:
+		0: feito = not faz.solo.is_empty()
+		1:
+			for k in faz.solo:
+				if faz.solo[k].has("cultura"):
+					feito = true
+		2:
+			for k in faz.solo:
+				if faz.solo[k].has("cultura") and bool(faz.solo[k].get("regado", false)):
+					feito = true
+		3: feito = Jogo.contar("madeira") > 0 or Jogo.contar("pedra") > 0
+		4: feito = _mapa_atual == "vila"
+		5: feito = not Jogo.conversou_hoje.is_empty()
+		6: feito = not Jogo.caixa_envio.is_empty() or Jogo.total_ganho > 0
+		7: feito = Jogo.dia_absoluto() > 0
+	if feito:
+		etapa += 1
+		Jogo.flags["objetivo"] = etapa
+		Som.tocar("pegar", 0.8, false)
+		if etapa >= OBJETIVOS.size():
+			Jogo.flags["objetivos_fim"] = true
+			Jogo.mensagem.emit("Você já sabe o básico. Agora o vale é seu!")
+			hud.call("mostrar_objetivo", "")
+			return
+	hud.call("mostrar_objetivo", OBJETIVOS[etapa] if etapa < OBJETIVOS.size() else "")
 
 func presentear(id: String) -> void:
 	var s = Jogo.selecionado()

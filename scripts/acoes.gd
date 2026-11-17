@@ -31,6 +31,8 @@ static func usar(P: Node, m: Mapa, c: Vector2i) -> void:
 		return
 	if d.tipo == "semente":
 		_plantar(P, m, c, id)
+	elif d.tipo == "muda":
+		_plantar_arvore(P, m, c, id)
 	elif id == "fertilizante" or id == "adubo_rapido":
 		var so := m.solo(c)
 		if not so.is_empty() and not so.has("adubo") and (not so.has("cultura") or int(so.cultura.dias) == 0):
@@ -137,6 +139,8 @@ static func _machado(P: Node, m: Mapa, c: Vector2i) -> void:
 					Jogo.adicionar("seiva", _rng().randi_range(1, 3), "", 0, true)
 				if _rng().randf() < 0.1:
 					Jogo.adicionar("madeira_dura", 1, "", 0, true)
+				if _rng().randf() < 0.3:
+					Jogo.adicionar("semente_arvore", 1, "", 0, true)
 				Jogo.ganhar_xp("coleta", 12)
 		"toco":
 			if Jogo.nivel_de("machado") < 1 and o.has("de") == false:
@@ -154,6 +158,17 @@ static func _machado(P: Node, m: Mapa, c: Vector2i) -> void:
 			m.remover_objeto(c)
 			if _rng().randf() < 0.5:
 				Jogo.adicionar("fibra", 1, "", 0, true)
+		"muda":
+			m.remover_objeto(c)
+			Jogo.adicionar("semente_arvore", 1, "", 0, true)
+		"frutifera":
+			o.hp = int(o.get("hp", 12)) - forca
+			if int(o.hp) <= 0:
+				m.remover_objeto(c)
+				m.por_objeto(c, {"tipo": "toco", "de": "arvore"})
+				Som.tocar("arvore_cai")
+				Jogo.adicionar("madeira", _rng().randi_range(8, 12), "", 0, true)
+				Jogo.ganhar_xp("coleta", 12)
 
 static func _picareta(P: Node, m: Mapa, c: Vector2i) -> void:
 	var o := m.objeto(c)
@@ -250,7 +265,8 @@ static func _vara(P: Node, m: Mapa, c: Vector2i) -> void:
 				return
 			Jogo.cansar(Jogo.custo_energia("pesca", 4.0))
 			Som.tocar("lancar")
-			P.ui.pescar(m.tipo_agua)
+			var mao: Vector2 = P.jogador.global_position + Vector2(P.jogador.olhando) * 12.0 + Vector2(0, -34)
+			P.ui.pescar(m.tipo_agua, m.centro(cc), mao)
 			return
 	Jogo.mensagem.emit("Fique de frente para a água para pescar.")
 
@@ -281,6 +297,27 @@ static func _plantar(P: Node, m: Mapa, c: Vector2i, semente: String) -> void:
 	Som.tocar("plantar")
 	Jogo.remover_do_slot(Jogo.slot)
 	m.redesenhar()
+
+static func _plantar_arvore(P: Node, m: Mapa, c: Vector2i, id: String) -> void:
+	if m.nome != "fazenda":
+		Jogo.mensagem.emit("Árvores só podem ser plantadas na fazenda.")
+		return
+	if c == P.jogador.celula() or m.solido(c) or not m.objeto(c).is_empty() or not m.solo(c).is_empty() or not m.aravel(c):
+		Jogo.mensagem.emit("Não dá para plantar aqui.")
+		return
+	if id != "semente_arvore":
+		# frutíferas precisam de espaço em volta
+		for dx in range(-1, 2):
+			for dy in range(-1, 2):
+				var v := c + Vector2i(dx, dy)
+				if (dx != 0 or dy != 0) and (m.solido(v) or not m.solo(v).is_empty()):
+					Jogo.mensagem.emit("A muda precisa de espaço livre em volta (3x3).")
+					return
+		m.por_objeto(c, {"tipo": "frutifera", "especie": id, "dias": 0, "frutos": 0})
+	else:
+		m.por_objeto(c, {"tipo": "muda", "dias": 0})
+	Som.tocar("plantar")
+	Jogo.remover_do_slot(Jogo.slot)
 
 static func _colocar(P: Node, m: Mapa, c: Vector2i, id: String) -> void:
 	if c == P.jogador.celula():
@@ -453,6 +490,23 @@ static func _interagir_objeto(P: Node, m: Mapa, c: Vector2i, o: Dictionary) -> b
 			return true
 		"elevador":
 			P.entrar_mina_menu()
+			return true
+		"frutifera":
+			var f: Dictionary = Dados.frutiferas[o.especie]
+			if int(o.get("frutos", 0)) > 0:
+				var anos := int((int(o.dias) - 28) / 112.0)
+				if Jogo.adicionar(String(f.fruta), int(o.frutos), "", clampi(anos, 0, 2), true) == 0:
+					o.frutos = 0
+					Som.tocar("colher")
+					Jogo.ganhar_xp("coleta", 6)
+					m.atualizar_objeto(c)
+			elif int(o.dias) < 28:
+				Jogo.mensagem.emit("%s: fica adulto em %d dia(s)." % [f.nome, 28 - int(o.dias)])
+			else:
+				Jogo.mensagem.emit("%s dá frutos no %s." % [f.nome, Dados.ESTACOES[int(f.estacao)].to_lower()])
+			return true
+		"muda":
+			Jogo.mensagem.emit("Uma árvore nova. Vira árvore grande em %d dia(s)." % max(10 - int(o.get("dias", 0)), 1))
 			return true
 		"arbusto":
 			if Jogo.estacao == 1 and not bool(o.get("colhido_hoje", false)):

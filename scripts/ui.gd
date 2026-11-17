@@ -42,7 +42,7 @@ static func descricao_item(s) -> String:
 		t = "%s %s" % [d.nome, Dados.NOMES_NIVEL_FERRAMENTA[Jogo.nivel_de(id)]]
 	var tipos := {"semente": "Semente", "cultura": "Colheita", "recurso": "Recurso", "forragem": "Coleta", "peixe": "Peixe", "animal": "Produto animal",
 		"artesanal": "Artesanal", "comida": "Comida", "objeto": "Objeto", "minerio": "Minério", "barra": "Barra", "gema": "Mineral",
-		"ferramenta": "Ferramenta", "consumivel": "Consumível", "especial": "Especial", "lixo": "Lixo"}
+		"ferramenta": "Ferramenta", "consumivel": "Consumível", "especial": "Especial", "lixo": "Lixo", "muda": "Árvore (plante na fazenda)"}
 	t += "\n" + String(tipos.get(d.tipo, ""))
 	if d.tipo == "semente":
 		var c := Dados.cultura_da_semente(id)
@@ -218,7 +218,7 @@ func mostrar_titulo() -> void:
 		_titulo_tela = null
 		principal.continuar(), Jogo.existe_save()))
 	vb.add_child(_botao("Sair", func(): get_tree().quit()))
-	var ajuda := _label("WASD: andar · Clique esquerdo/Espaço: usar ferramenta · Clique direito/F: interagir\nE: mochila · 1-0: escolher item · Q: comer · J: mural · K: amizades · Esc: menu", 12)
+	var ajuda := _label("WASD: andar · Clique esquerdo/Espaço: usar ferramenta · Clique direito/F: interagir\nE: mochila · 1-0: escolher item · Q: comer · M: mapa · J: mural · K: amizades · Esc: menu", 12)
 	ajuda.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(ajuda)
 
@@ -263,7 +263,7 @@ func mostrar_texto(texto: String, depois := Callable()) -> void:
 	vb.add_child(_botao("OK", fechar))
 	_ao_fechar = depois
 
-func mostrar_dialogo(npc: String, texto: String) -> void:
+func mostrar_dialogo(npc: String, texto: String, depois := Callable()) -> void:
 	var d: Dictionary = Dados.aldeoes[npc]
 	var vb := _abrir("", 640)
 	var hb := HBoxContainer.new()
@@ -293,7 +293,8 @@ func mostrar_dialogo(npc: String, texto: String) -> void:
 	direita.add_child(_label(texto, 16))
 	hb.add_child(direita)
 	vb.add_child(hb)
-	vb.add_child(_botao("Até mais", fechar))
+	vb.add_child(_botao("Continuar" if depois.is_valid() else "Até mais", fechar))
+	_ao_fechar = depois
 
 # ---------------------------------------------------------------- mochila e abas
 
@@ -422,7 +423,7 @@ func _aba_conquistas() -> void:
 
 func _aba_opcoes(vb: VBoxContainer) -> void:
 	vb.add_child(_label("O jogo salva sozinho toda vez que você dorme.", 15))
-	vb.add_child(_label("Controles:\nWASD ou setas: andar\nClique esquerdo ou Espaço: usar o item da mão\nClique direito ou F: falar, colher, abrir, interagir\n1 a 0, - e =: escolher item (ou roda do mouse)\nE: mochila · Q: comer o item da mão · J: mural de pedidos · K: amizades · Esc: menu", 14))
+	vb.add_child(_label("Controles:\nWASD ou setas: andar\nClique esquerdo ou Espaço: usar o item da mão\nClique direito ou F: falar, colher, abrir, interagir\n1 a 0, - e =: escolher item (ou roda do mouse)\nE: mochila · Q: comer o item da mão · M: mapa · J: mural de pedidos · K: amizades · Esc: menu", 14))
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 14)
 	vb.add_child(_label("Volume da música", 14))
@@ -795,6 +796,66 @@ func _doar(cid: String, item: String) -> void:
 			return
 	abrir_colecoes()
 
+# ---------------------------------------------------------------- mapa
+
+const CORES_MAPA := {0: "#5a9a3a", 1: "#3a7a2a", 2: "#8aaa4a", 3: "#c8955a", 4: "#a8754a", 5: "#8a5a3a", 6: "#e0c890",
+	7: "#4a7a3a", 8: "#3a7ac8", 9: "#9a6a42", 10: "#5a3a2a", 11: "#7a6a5a", 12: "#101010", 13: "#8a2a2a"}
+const NOMES_LUGARES := {"fazenda": "Fazenda", "vila": "Vila", "floresta": "Bosque do Rio", "montanha": "Montanha", "casa": "Casa", "estufa": "Estufa"}
+
+func abrir_mapa() -> void:
+	var m: Mapa = principal.mapa
+	if m == null:
+		return
+	var vb := _abrir("Mapa — " + String(NOMES_LUGARES.get(m.nome, "Mina" if m.andar > 0 else "Interior")), 780)
+	var area := Control.new()
+	var escala: float = min(740.0 / m.w, 420.0 / m.h)
+	area.custom_minimum_size = Vector2(m.w * escala, m.h * escala)
+	area.draw.connect(func():
+		for y in m.h:
+			for x in m.w:
+				var c := Vector2i(x, y)
+				var cor := Color(CORES_MAPA.get(m.material(c), "#000000"))
+				if m.bloqueio[m.idx(c)] != 0:
+					cor = cor.darkened(0.45)
+				var o := m.objeto(c)
+				if not o.is_empty() and (o.tipo == "arvore" or o.tipo == "pinheiro" or o.tipo == "frutifera"):
+					cor = Color("#2a5a20")
+				area.draw_rect(Rect2(x * escala, y * escala, escala + 0.5, escala + 0.5), cor)
+		for k in m.est.solo:
+			var c2 := Jogo.celula(k)
+			area.draw_rect(Rect2(c2.x * escala, c2.y * escala, escala, escala), Color("#6a3a1a"))
+		var fonte := area.get_theme_default_font()
+		for b in m.construcoes_fixas:
+			var r: Rect2i = b.rect
+			var rr := Rect2(r.position.x * escala, r.position.y * escala, r.size.x * escala, r.size.y * escala)
+			area.draw_rect(rr, Color("#a8643a"))
+			area.draw_rect(rr, Color("#3a2010"), false, 1.5)
+			if String(b.get("rotulo", "")) != "":
+				area.draw_string_outline(fonte, rr.position + Vector2(0, rr.size.y + 12), String(b.rotulo), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, 4, Color.BLACK)
+				area.draw_string(fonte, rr.position + Vector2(0, rr.size.y + 12), String(b.rotulo), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
+		for s in m.saidas:
+			var r2: Rect2i = s.rect
+			var p := Vector2((r2.position.x + r2.size.x / 2.0) * escala, (r2.position.y + r2.size.y / 2.0) * escala)
+			area.draw_circle(p, 5, Color("#f8e858"))
+			var nome := String(NOMES_LUGARES.get(String(s.destino), ""))
+			if nome != "" and r2.size.x * r2.size.y > 1:
+				area.draw_string_outline(fonte, p + Vector2(-20, -8), "→ " + nome, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, 4, Color.BLACK)
+				area.draw_string(fonte, p + Vector2(-20, -8), "→ " + nome, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#f8e858"))
+		for id in principal.npcs:
+			var n = principal.npcs[id]
+			var pn: Vector2 = n.position / Mapa.T * escala
+			area.draw_circle(pn, 4, Dados.aldeoes[id].cor)
+			area.draw_string_outline(fonte, pn + Vector2(5, 4), Dados.aldeoes[id].nome, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 3, Color.BLACK)
+			area.draw_string(fonte, pn + Vector2(5, 4), Dados.aldeoes[id].nome, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+		var pj: Vector2 = principal.jogador.position / Mapa.T * escala
+		area.draw_circle(pj, 6, Color.WHITE)
+		area.draw_circle(pj, 4.5, Color("#e8402a")))
+	var centro := CenterContainer.new()
+	centro.add_child(area)
+	vb.add_child(centro)
+	vb.add_child(_label("Fazenda ↔ Vila (leste) · Fazenda ↔ Bosque do Rio (sul) · Fazenda ↔ Montanha (norte) · Vila ↔ Montanha (norte) · Vila ↔ Bosque (sul)", 12))
+	vb.add_child(_botao("Fechar", fechar))
+
 # ---------------------------------------------------------------- mina
 
 func abrir_elevador() -> void:
@@ -920,13 +981,15 @@ func mostrar_cartas() -> void:
 
 # ---------------------------------------------------------------- pesca
 
-func pescar(lugar: String) -> void:
+func pescar(lugar: String, alvo := Vector2.ZERO, mao := Vector2.ZERO) -> void:
 	if _pesca:
 		return
 	Jogo.pausado = true
 	_pesca = Control.new()
 	_pesca.set_script(preload("res://scripts/pesca.gd"))
 	_pesca.set("lugar", lugar)
+	_pesca.set("alvo_mundo", alvo)
+	_pesca.set("mao_mundo", mao)
 	_pesca.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_pesca)
 	_pesca.tree_exited.connect(func():

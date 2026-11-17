@@ -11,7 +11,7 @@ const TEXTURAS := ["grass", "forest", "meadow", "path-dry", "path-wet", "soil", 
 const SOLIDOS := ["arvore", "pinheiro", "toco", "pedra", "rocha", "minerio", "galho", "bau", "espantalho", "aspersor",
 	"aspersor_bom", "barril", "conserveiro", "fornalha", "forno_carvao", "prensa_queijo", "batedeira", "tear", "caixa_abelha",
 	"tocha", "cerca", "caixa_envio", "arbusto", "deco_solida", "poco", "fogao", "cama", "cocho", "mural", "colecoes", "pedra_mina",
-	"caixa_gelo", "estatua", "mesa"]
+	"caixa_gelo", "estatua", "mesa", "frutifera"]
 
 var nome := ""
 var w := 10

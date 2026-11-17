@@ -77,7 +77,7 @@ func _criar_controles() -> void:
 	var mapa := {
 		"cima": [KEY_W, KEY_UP], "baixo": [KEY_S, KEY_DOWN], "esquerda": [KEY_A, KEY_LEFT], "direita": [KEY_D, KEY_RIGHT],
 		"usar": [KEY_SPACE, KEY_C], "interagir": [KEY_F, KEY_X], "inventario": [KEY_E, KEY_I, KEY_TAB], "menu": [KEY_ESCAPE],
-		"comer": [KEY_Q], "diario": [KEY_J], "social": [KEY_K],
+		"comer": [KEY_Q], "diario": [KEY_J], "social": [KEY_K], "mapa": [KEY_M],
 	}
 	for acao in mapa:
 		if not InputMap.has_action(acao):
@@ -596,9 +596,23 @@ func _crescer_plantas(virou_estacao: bool) -> void:
 				s.regado = false
 		for k in remover_solo:
 			est.solo.erase(k)
-		# caixas de abelha e outras produções diárias
-		for k in est.objetos:
+		# caixas de abelha, árvores e outras produções diárias
+		for k in est.objetos.keys():
 			var o: Dictionary = est.objetos[k]
+			if o.tipo == "muda":
+				o.dias = int(o.get("dias", 0)) + 1
+				if int(o.dias) >= 10:
+					est.objetos[k] = {"tipo": "arvore"}
+				continue
+			if o.tipo == "frutifera":
+				o.dias = int(o.get("dias", 0)) + 1
+				var f: Dictionary = Dados.frutiferas.get(String(o.especie), {})
+				if int(o.dias) >= 28 and not f.is_empty():
+					if estacao == int(f.estacao):
+						o.frutos = min(int(o.get("frutos", 0)) + 1, 3)
+					else:
+						o.frutos = 0
+				continue
 			if o.tipo == "caixa_abelha" and estacao != 3:
 				o.dias = int(o.get("dias", 0)) + 1
 				if int(o.dias) >= 4 and not o.has("saida"):

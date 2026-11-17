@@ -43,7 +43,7 @@ func _process(delta: float) -> void:
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var o := mapa.objeto(celula)
-	if not o.is_empty() and (ARTES.has(String(o.tipo)) or String(o.tipo).begins_with("deco")):
+	if not o.is_empty() and (ARTES.has(String(o.tipo)) or String(o.tipo).begins_with("deco") or o.tipo == "frutifera"):
 		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func tremer() -> void:
@@ -81,6 +81,29 @@ func _draw() -> void:
 				draw_circle(p, 3, Color("#5a2a6e"))
 		return
 	match tipo:
+		"muda":
+			Desenho.sprite(self, "objetos/muda", desloc)
+		"frutifera":
+			var dias := int(o.get("dias", 0))
+			var tex := textura("asset-tree-%d" % (abs(celula.x + celula.y) % 3))
+			var crescer := clampf(0.3 + 0.7 * dias / 28.0, 0.3, 1.0)
+			var largura := 96.0 * crescer
+			var escala := largura / tex.get_width()
+			var tam := Vector2(tex.get_width(), tex.get_height()) * escala
+			var cor := Color(0.95, 1.08, 0.95)
+			if Jogo.estacao == 3:
+				cor = Color(1.1, 1.12, 1.2)
+			draw_texture_rect(tex, Rect2(Vector2(-tam.x / 2.0, -tam.y + 4) + desloc, tam), false, cor)
+			var f: Dictionary = Dados.frutiferas.get(String(o.get("especie", "")), {})
+			var pontos := [Vector2(-22, -70), Vector2(18, -78), Vector2(0, -58)]
+			for i in int(o.get("frutos", 0)):
+				var p: Vector2 = pontos[i] * crescer
+				draw_circle(p, 5, Color(0.1, 0.05, 0.05))
+				draw_circle(p, 4, f.get("cor", Color.RED))
+				draw_circle(p + Vector2(-1.5, -1.5), 1.2, Color(1, 1, 1, 0.7))
+			if Jogo.estacao == int(f.get("estacao", -1)) and dias >= 28 and int(o.get("frutos", 0)) == 0:
+				for p in [Vector2(-16, -64), Vector2(12, -70)]:
+					draw_circle(p * crescer, 2.5, Color(1, 0.9, 0.95))
 		"mato":
 			var tinta := Color.WHITE
 			if Jogo.estacao == 2:

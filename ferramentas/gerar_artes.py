@@ -448,6 +448,25 @@ def it_chave(cor):
     return acabar(im)
 
 
+def it_muda(cor):
+    im, d = tela()
+    d.polygon([(4, 15), (11, 15), (10, 11), (5, 11)], fill=hexc("#a86a3a"))
+    d.line((7, 11, 7, 5), fill=hexc("#6a4a2a"))
+    d.ellipse((3, 2, 9, 7), fill=hexc("#5a9a3a"))
+    d.ellipse((7, 1, 13, 6), fill=hexc("#6aaa44"))
+    d.ellipse((9, 4, 11, 6), fill=sem_sombra(cor))
+    return acabar(im)
+
+
+def it_bolota(cor):
+    im, d = tela()
+    d.ellipse((4, 5, 11, 14), fill=cor)
+    d.pieslice((3, 2, 12, 9), 180, 360, fill=hexc("#6a4a2a"))
+    d.line((7, 2, 8, 0), fill=hexc("#5a3a1a"))
+    d.point([(6, 9)], fill=sem_sombra(claro(cor, 0.5)))
+    return acabar(im)
+
+
 def it_isca(cor):
     im, d = tela()
     d.line((3, 12, 6, 9), fill=cor, width=2)
@@ -794,6 +813,12 @@ def objetos():
     for v in range(3):
         obj("mato_%d" % v, 16, 16, mato(v))
 
+    def muda(d, w, h):
+        d.line((7, h - 1, 7, h - 10), fill=hexc("#6a4a2a"))
+        d.ellipse((2, h - 15, 9, h - 8), fill=hexc("#5a9a3a"))
+        d.ellipse((6, h - 16, 13, h - 9), fill=hexc("#6aaa44"))
+    obj("muda", 16, 16, muda)
+
 
 # ------------------------------------------------------------------ animais (olhando para a direita)
 
@@ -939,6 +964,9 @@ ITENS = {
     "fertilizante": ("saco", "#6a4a2a"), "adubo_rapido": ("saco", "#4a8a3a"), "isca": ("isca", "#b86a5a"),
     "escada": ("escada", "#9a6b3e"), "buque": ("buque", "#f08ab0"), "anel_orvalho": ("anel", "#7ad8e8"),
     "chave_estufa": ("chave", "#e8c33a"),
+    "pessego": ("bola", "#f0a070"), "laranja": ("bola", "#f08a1a"), "maca": ("bola", "#d83a3a"), "roma": ("bola", "#b8283a"),
+    "muda_pessegueiro": ("muda", "#f0a070"), "muda_laranjeira": ("muda", "#f08a1a"), "muda_macieira": ("muda", "#d83a3a"),
+    "muda_romazeira": ("muda", "#b8283a"), "semente_arvore": ("bolota", "#a8783a"),
 }
 
 
@@ -952,7 +980,7 @@ def item(id_, forma, cor_hex):
         "alho": it_alho, "amora": it_amora, "flor": it_flor, "cogumelo": it_cogumelo, "ovo": it_ovo,
         "la": it_la, "pote": it_pote, "queijo": it_queijo, "tecido": it_tecido, "xicara": it_xicara,
         "saco": it_saco, "isca": it_isca, "escada": it_escada, "buque": it_buque, "anel": it_anel,
-        "chave": it_chave, "bota": it_bota,
+        "chave": it_chave, "bota": it_bota, "muda": it_muda, "bolota": it_bolota,
     }
     if forma in f:
         return f[forma](c)
@@ -1005,7 +1033,7 @@ def main():
     pastas = ["itens", "culturas", "objetos", "animais", "monstros"]
     imagens = []
     for p in pastas:
-        for n in sorted(os.listdir(os.path.join(RAIZ, p))):
+        for n in sorted(x for x in os.listdir(os.path.join(RAIZ, p)) if x.endswith(".png")):
             imagens.append(Image.open(os.path.join(RAIZ, p, n)))
     col = 20
     cel = 52

@@ -25,6 +25,8 @@ var animais := {}
 var festivais := {}
 var colecoes := {}
 var conquistas := {}
+var frutiferas := {}
+var eventos := {}
 
 func _ready() -> void:
 	_itens()
@@ -39,6 +41,8 @@ func _ready() -> void:
 	_festivais()
 	_colecoes()
 	_conquistas()
+	_frutiferas()
+	_eventos()
 
 # ---------------------------------------------------------------- itens
 
@@ -175,6 +179,16 @@ func _itens() -> void:
 	_i("isca", "Isca", 1, "consumivel", "#8a5a4a", "minerio")
 	_i("escada", "Escada de corda", 10, "consumivel", "#9a6b3e", "cerca")
 	_i("pocao", "Tônico de cura", 50, "comida", "#d84a5a", "garrafa", {"energia": 30, "vida": 60})
+	# Árvores
+	_i("pessego", "Pêssego", 140, "cultura", "#f0a070", "bola", {"energia": 40, "categoria": "fruta"})
+	_i("laranja", "Laranja", 100, "cultura", "#f08a1a", "bola", {"energia": 40, "categoria": "fruta"})
+	_i("maca", "Maçã", 100, "cultura", "#d83a3a", "bola", {"energia": 40, "categoria": "fruta"})
+	_i("roma", "Romã", 140, "cultura", "#b8283a", "bola", {"energia": 40, "categoria": "fruta"})
+	_i("muda_pessegueiro", "Muda de pessegueiro", 750, "muda", "#f0a070", "semente")
+	_i("muda_laranjeira", "Muda de laranjeira", 1000, "muda", "#f08a1a", "semente")
+	_i("muda_macieira", "Muda de macieira", 750, "muda", "#d83a3a", "semente")
+	_i("muda_romazeira", "Muda de romãzeira", 900, "muda", "#b8283a", "semente")
+	_i("semente_arvore", "Semente de árvore", 5, "muda", "#a8783a", "semente")
 	# Especiais
 	_i("buque", "Buquê", 100, "especial", "#f08ab0", "buque")
 	_i("anel_orvalho", "Anel do Orvalho", 2500, "especial", "#7ad8e8", "anel")
@@ -447,7 +461,8 @@ func _lojas() -> void:
 			"itens": [["sem_alface", 20, [0]], ["sem_batata", 50, [0]], ["sem_couve", 60, [0]], ["sem_margarida", 30, [0]], ["sem_morango", 100, [0]],
 				["sem_tomate", 50, [1]], ["sem_milho", 150, [1, 2]], ["sem_melancia", 80, [1]], ["sem_pimenta", 40, [1]], ["sem_girassol", 200, [1, 2]],
 				["sem_abobora", 100, [2]], ["sem_berinjela", 20, [2]], ["sem_inhame", 60, [2]], ["sem_uva", 60, [2]],
-				["fertilizante", 100, []], ["buque", 200, []], ["cafe", 300, []]]},
+				["fertilizante", 100, []], ["buque", 200, []], ["cafe", 300, []],
+				["muda_pessegueiro", 1500, []], ["muda_laranjeira", 2000, []], ["muda_macieira", 1500, []], ["muda_romazeira", 1800, []]]},
 		"ferreiro": {"nome": "Forja do Bento", "dono": "bento", "abre": 9, "fecha": 16, "folga": -1,
 			"itens": [["minerio_cobre", 75, []], ["minerio_ferro", 150, []], ["carvao", 150, []], ["minerio_ouro", 400, []]], "melhorias": true},
 		"carpintaria": {"nome": "Carpintaria da Rosa", "dono": "rosa", "abre": 9, "fecha": 17, "folga": 1,
@@ -501,4 +516,40 @@ func _conquistas() -> void:
 		"cozinheiro": {"nome": "Cozinheiro", "desc": "Cozinhe 10 pratos."},
 		"criador": {"nome": "Criador", "desc": "Tenha 5 animais."},
 		"artesao": {"nome": "Artesão", "desc": "Fabrique 50 itens."},
+	}
+
+# ---------------------------------------------------------------- árvores frutíferas
+
+func _frutiferas() -> void:
+	frutiferas = {
+		"muda_pessegueiro": {"nome": "Pessegueiro", "fruta": "pessego", "estacao": 0, "cor": Color("#f0a070")},
+		"muda_laranjeira": {"nome": "Laranjeira", "fruta": "laranja", "estacao": 1, "cor": Color("#f08a1a")},
+		"muda_macieira": {"nome": "Macieira", "fruta": "maca", "estacao": 2, "cor": Color("#d83a3a")},
+		"muda_romazeira": {"nome": "Romãzeira", "fruta": "roma", "estacao": 2, "cor": Color("#b8283a")},
+	}
+
+# ---------------------------------------------------------------- cenas de amizade (3 e 6 corações)
+
+func _eventos() -> void:
+	eventos = {
+		"celeste": {3: ["Ah, que bom que você passou. Senta um pouquinho.", "Sabe, quando eu abri o armazém, seu avô foi o primeiro freguês. Comprou um saco de sementes de alface e pagou com uma abóbora.", "Ele dizia que a terra devolve tudo o que a gente dá a ela. Acho que você é igual a ele."],
+			6: ["Guardei uma coisa pra você.", "É o caderno de anotações do seu avô. Ele esqueceu aqui no armazém, faz muitos anos.", "Tem dicas de plantio de cada estação. Acho que agora ele é seu, querido."]},
+		"bento": {3: ["Hm. Você de novo.", "...Tá bom, admito. Suas visitas não me incomodam.", "Quando quiser ver como se faz uma barra de ferro de verdade, aparece de manhã cedo."],
+			6: ["Senta aí. Não, não é pra conversar. É pra ver.", "(Bento trabalha em silêncio por um bom tempo, martelando uma lâmina. O fogo estala.)", "Meu pai dizia que o metal só fica bom quando a gente tem paciência com ele. Gente também. Pode ir agora."]},
+		"rosa": {3: ["Ei! Segura essa tábua aqui pra mim? Isso, bem firme.", "Pronto. Uma cadeira nova pra taverna. A Lia vive quebrando as dela.", "Você leva jeito. Se cansar da fazenda, tem emprego na carpintaria."],
+			6: ["Vou te contar um segredo: eu queria ser arquiteta na cidade grande.", "Mas aí meu pai adoeceu e eu fiquei. Achei que ia me arrepender.", "Olho pras casas do vale e penso: cada uma tem um pedaço de mim. Não me arrependo nada."]},
+		"tiao": {3: ["Olha só quem chegou! Vem cá ver uma coisa.", "(Um bezerrinho recém-nascido tenta ficar em pé, tremendo.)", "Nasceu hoje de madrugada. Toda vez é como se fosse a primeira. Ê lasqueira, que coisa linda."],
+			6: ["Tô ficando velho pra cuidar do rancho sozinho, sabia?", "Mas vendo você cuidar dos seus bichos, fico tranquilo.", "O vale tá em boas mãos. Pode deixar que eu conto isso pra todo mundo."]},
+		"nonato": {3: ["Psst. Fica quietinho. Tá vendo aquela sombra perto da pedra?", "(Nonato puxa a linha num movimento só. Um dourado enorme salta da água.)", "Cinquenta anos de rio e ainda me arrepio. Toma, leva pra casa. Hoje é seu."],
+			6: ["O Davi vai herdar minha vara, mas a minha história eu quero contar pra você.", "Eu vi o Peixe-do-orvalho uma vez. Manhã de chuva, primavera, no lago da montanha.", "Ninguém acredita. Mas eu sei que você vai pegar ele um dia."]},
+		"augusto": {3: ["Sabia que o vale quase ficou vazio, uns anos atrás?", "A estufa caiu, o salão fechou, os jovens foram embora pra cidade.", "Desde que você chegou, as pessoas voltaram a sorrir na praça. Obrigado."],
+			6: ["Encontrei no arquivo da prefeitura uma foto antiga.", "É a festa das flores de quarenta anos atrás. Olha ali: é o seu avô dançando!", "Fique com ela. Ele ia gostar de saber que você está aqui."]},
+		"lia": {3: ["Ufa, que noite! Senta, vou te servir um prato por conta da casa.", "É uma receita nova. Seja sincero(a)... tá bom mesmo?", "Ah, que alívio! Você é a primeira pessoa que provou. Volta sempre, tá?"],
+			6: ["Hoje fechei a taverna mais cedo. Vem, quero te mostrar o terraço.", "Daqui dá pra ver o vale inteiro. As luzes da sua fazenda estão ali, ó.", "Às vezes eu queria viajar... mas com você por perto, ficar aqui parece uma ótima ideia."]},
+		"davi": {3: ["Aposto que pego um peixe antes de você!", "(Vocês pescam lado a lado. Davi fisga uma bota velha e cai na risada.)", "Tá, tá, você ganhou. Mas amanhã tem revanche!"],
+			6: ["Às vezes eu penso se devia ter ido pra capital com meus pais.", "Mas aí venho aqui, ouço o rio, e sei que é aqui que eu quero ficar.", "...E também porque você está aqui. Esquece que eu disse isso."]},
+		"marina": {3: ["Não se mexe! A luz está perfeita no seu rosto.", "(Marina pinta rapidamente por alguns minutos.)", "Pronto. Ficou meio torto, mas tem alguma coisa sua aí. Gostou?"],
+			6: ["Vou fazer uma exposição na cidade. Com quadros do vale.", "O principal é este aqui: a sua fazenda ao amanhecer, com o orvalho brilhando.", "Ele se chama 'Recomeço'. Achei que combinava com você."]},
+		"caio": {3: ["Quer aprender um golpe? Fica de lado, pé firme.", "(Caio mostra como girar a espada sem perder o equilíbrio.)", "Isso. Agora você tem mais chances lá embaixo. Mas continue levando comida."],
+			6: ["Na guerra eu perdi muita gente. Vim pro vale procurando silêncio.", "Achei mais do que isso. Achei um lugar pra proteger.", "E alguém pra confiar. Obrigado por ouvir."]},
 	}

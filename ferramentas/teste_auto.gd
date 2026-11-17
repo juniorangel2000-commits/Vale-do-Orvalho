@@ -16,7 +16,8 @@ func _ready() -> void:
 	P.ui.call("_comecar", "Teste", "Teste")
 	await _quadros(5)
 	P.ui.call("fechar")
-	await _quadros(3)
+	await _quadros(35)
+	_checar(P.hud._objetivo.visible, "objetivo do primeiro dia aparece")
 	await _print("01_casa")
 	_checar(P.mapa.nome == "casa", "começa em casa")
 	# fazenda
@@ -244,6 +245,59 @@ func _ready() -> void:
 	_checar(Jogo.dinheiro == dinheiro_salvo and Jogo.contar("madeira") == inv, "save mantém dados")
 	P.ir_para("fazenda", Vector2i(11, 9))
 	await _quadros(3)
+	# árvores
+	Jogo.estacao = 0
+	P.ir_para("fazenda", Vector2i(11, 9))
+	await _quadros(2)
+	m = P.mapa
+	var ca := Vector2i(20, 14)
+	for dx in range(-1, 2):
+		for dy in range(-1, 2):
+			m.remover_objeto(ca + Vector2i(dx, dy))
+			m.remover_solo(ca + Vector2i(dx, dy))
+	Jogo.adicionar("muda_pessegueiro", 1)
+	Jogo.slot = _slot_de("muda_pessegueiro")
+	Acoes.usar(P, m, ca)
+	_checar(m.objeto(ca).get("tipo", "") == "frutifera", "plantar muda de pessegueiro")
+	var cs := Vector2i(24, 14)
+	m.remover_objeto(cs)
+	m.remover_solo(cs)
+	Jogo.adicionar("semente_arvore", 1)
+	Jogo.slot = _slot_de("semente_arvore")
+	Acoes.usar(P, m, cs)
+	_checar(m.objeto(cs).get("tipo", "") == "muda", "plantar semente de árvore")
+	Jogo.dia = 1
+	for i in 29:
+		Jogo.passar_dia("")
+	Jogo.estacao = 0
+	Jogo.passar_dia("")
+	P.ir_para("fazenda", Vector2i(11, 9))
+	m = P.mapa
+	await _quadros(3)
+	_checar(m.objeto(cs).get("tipo", "") == "arvore", "muda vira árvore")
+	_checar(int(m.objeto(ca).get("frutos", 0)) >= 1, "pessegueiro dá frutos na primavera")
+	var pes := Jogo.contar("pessego")
+	Acoes.interagir(P, m, ca)
+	_checar(Jogo.contar("pessego") > pes, "colher pêssegos")
+	P.jogador.position = m.centro(ca + Vector2i(0, 2)) + Vector2(0, 12)
+	await _quadros(3)
+	await _print("19_frutifera")
+	# cena de amizade
+	Jogo.amizade["marina"] = 800
+	Jogo.flags.erase("evento_marina_3")
+	P.conversar("marina")
+	await _quadros(2)
+	await _print("20_cena_amizade")
+	_checar(Jogo.flags.has("evento_marina_3"), "cena de 3 corações")
+	for i in 5:
+		if P.ui.call("menu_aberto"):
+			P.ui.call("fechar")
+			await _quadros(1)
+	# mapa
+	P.ui.call("abrir_mapa")
+	await _quadros(2)
+	await _print("21_mapa")
+	P.ui.call("fechar")
 	# som
 	_checar(Som.call("_carregar", "res://som/musica/primavera.ogg") != null, "música carrega")
 	_checar(Som.call("_carregar", "res://som/efeitos/enxada.wav") != null, "efeito carrega")

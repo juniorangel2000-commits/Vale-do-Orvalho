@@ -9,6 +9,8 @@ var _slots: Array = []
 var _mensagens: VBoxContainer
 var _energia: Control
 var _local: Label
+var _objetivo: PanelContainer
+var _objetivo_texto: Label
 
 func _ready() -> void:
 	# Relógio
@@ -81,6 +83,25 @@ func _ready() -> void:
 	_mensagens.alignment = BoxContainer.ALIGNMENT_END
 	_mensagens.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_mensagens)
+	_objetivo = PanelContainer.new()
+	_objetivo.add_theme_stylebox_override("panel", Ui.estilo_painel(Color("#f2dfb4", 0.92)))
+	_objetivo.position = Vector2(10, 10)
+	_objetivo.custom_minimum_size = Vector2(330, 0)
+	_objetivo.visible = false
+	var vbo := VBoxContainer.new()
+	_objetivo.add_child(vbo)
+	var t := Label.new()
+	t.text = "Objetivo"
+	t.add_theme_color_override("font_color", Color("#6a2a10"))
+	t.add_theme_font_size_override("font_size", 14)
+	vbo.add_child(t)
+	_objetivo_texto = Label.new()
+	_objetivo_texto.add_theme_color_override("font_color", Color("#3a2010"))
+	_objetivo_texto.add_theme_font_size_override("font_size", 13)
+	_objetivo_texto.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_objetivo_texto.custom_minimum_size = Vector2(306, 0)
+	vbo.add_child(_objetivo_texto)
+	add_child(_objetivo)
 	Jogo.inventario_mudou.connect(atualizar)
 	Jogo.dinheiro_mudou.connect(atualizar)
 	Jogo.energia_mudou.connect(atualizar)
@@ -116,6 +137,14 @@ static func _milhar(n: int) -> String:
 		r = "." + t.substr(t.length() - 3) + r
 		t = t.substr(0, t.length() - 3)
 	return ("-" if n < 0 else "") + t + r
+
+func mostrar_objetivo(texto: String) -> void:
+	if _objetivo == null:
+		return
+	_objetivo.visible = texto != ""
+	if _objetivo_texto.text != texto:
+		_objetivo_texto.text = texto
+		_objetivo.reset_size()
 
 func _slot_clicado(s: SlotUI, botao: int) -> void:
 	if botao == MOUSE_BUTTON_LEFT:

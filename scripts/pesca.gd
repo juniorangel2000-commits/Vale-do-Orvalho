@@ -16,6 +16,8 @@ var _barra_tam := 0.2
 var _progresso := 0.3
 var _perfeito := true
 var _isca := false
+var alvo_mundo := Vector2.ZERO
+var mao_mundo := Vector2.ZERO
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -157,6 +159,20 @@ func _terminar(pegou: bool) -> void:
 func _draw() -> void:
 	var tela := get_viewport_rect().size
 	var c := tela / 2.0
+	if alvo_mundo != Vector2.ZERO:
+		var ct := get_viewport().get_canvas_transform()
+		var boia: Vector2 = ct * alvo_mundo
+		var mao: Vector2 = ct * mao_mundo
+		var balanco := sin(_tempo * 3.0) * 2.0
+		if fase == "fisgou":
+			balanco = 6.0 + sin(_tempo * 30.0) * 3.0
+			draw_arc(boia + Vector2(0, 8), 10 + fmod(_tempo * 40.0, 14.0), 0, TAU, 20, Color(1, 1, 1, 0.6), 2)
+		elif fase == "lutando":
+			balanco = sin(_tempo * 20.0) * 4.0
+		draw_line(mao, boia + Vector2(0, balanco - 6), Color(1, 1, 1, 0.75), 1.5)
+		draw_circle(boia + Vector2(0, balanco), 6, Color("#f4f4f0"))
+		draw_circle(boia + Vector2(0, balanco - 3), 6, Color("#e83a2a"))
+		draw_arc(boia + Vector2(0, 6), 9, 0, PI, 12, Color(1, 1, 1, 0.4), 1.5)
 	match fase:
 		"esperando":
 			var pontos := ".".repeat(int(_tempo * 2) % 4)

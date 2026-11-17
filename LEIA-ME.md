@@ -21,6 +21,7 @@ família) com quem mora ali.
 | 1 a 0, `-`, `=` ou roda do mouse | escolher o item da barra |
 | E | mochila (com abas de fabricação, habilidades, amizades e conquistas) |
 | Q | comer o item da mão |
+| M | mapa do lugar onde você está |
 | J | mural de pedidos |
 | K | amizades |
 | Esc | menu e fechar janelas |
@@ -54,6 +55,16 @@ família) com quem mora ali.
 - Melhoria de ferramentas (cobre, ferro, ouro) na forja
 - Mural de pedidos dos aldeões e 4 festivais (flores, luau, feira da colheita e lanternas)
 
+**Polimento**
+- Artes em pixel art para itens, plantas (5 fases), máquinas, animais e monstros
+- Aldeões com cabelo, roupa e pele próprios (cores trocadas a partir da personagem)
+- 30 efeitos sonoros, chuva ambiente e 7 músicas (estações, casa, mina, festa), com volume nas opções
+- Objetivos guiados no primeiro dia
+- Cursor que mostra o bloco que a ferramenta vai atingir
+- Árvores frutíferas (pêssego, laranja, maçã e romã) e sementes de árvore para replantar
+- Duas cenas especiais com cada aldeão (aos 3 e aos 6 corações)
+- Mapa do lugar (tecla M) e boia/linha visíveis na pesca
+
 **Etapa 4 — fim de jogo**
 - Namoro (buquê aos 8 corações), casamento (Anel do Orvalho aos 10 corações e casa ampliada)
 - Cônjuge morando na fazenda e ajudando (rega, cuida dos animais, faz café da manhã)
@@ -61,12 +72,23 @@ família) com quem mora ali.
 - Salão da Vila com 6 coleções; completar todas reforma a estufa (planta em qualquer estação)
 - 15 conquistas
 
-## Ainda provisório
+## Artes e sons gerados por código
 
-- Plantas, itens, máquinas, animais e monstros são desenhados por código (formas simples).
-  Os aldeões usam o corpo da personagem com outra cor. Tudo pode ser trocado por artes de verdade.
-- Ainda sem música e sem efeitos sonoros.
-- Sem multijogador.
+As artes novas e os sons saem de scripts Python (precisam de Pillow, numpy e ffmpeg):
+
+```
+python3 ferramentas/gerar_artes.py     # arte/gerada/{itens,culturas,objetos,animais,monstros}
+python3 ferramentas/gerar_aldeoes.py   # arte/gerada/aldeoes (troca as cores da personagem)
+python3 ferramentas/gerar_sons.py      # som/efeitos (.wav) e som/musica (.ogg)
+```
+
+Para trocar uma arte por outra feita à mão, basta salvar a imagem nova com o mesmo nome.
+Se a imagem não existir, o jogo volta ao desenho simples de `scripts/desenho.gd`.
+
+## Ainda falta
+
+- Multijogador.
+- Executável Windows (por enquanto, jogue pela Godot).
 
 ## Teste automático
 
