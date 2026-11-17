@@ -11,6 +11,7 @@ var _dir := 1.0
 var _coracao := 0.0
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_alvo = position
 
 func _process(delta: float) -> void:

@@ -2,6 +2,37 @@ class_name Desenho
 ## Desenhos simples feitos por código (ícones, plantas, máquinas, animais, monstros).
 ## São provisórios: cada um pode ser trocado por uma arte de verdade depois.
 
+static var _tex := {}
+
+## Textura de arte/gerada (ou null se não existir).
+static func tex(caminho: String) -> Texture2D:
+	if not _tex.has(caminho):
+		var p := "res://arte/gerada/%s.png" % caminho
+		_tex[caminho] = load(p) if ResourceLoader.exists(p) else null
+	return _tex[caminho]
+
+## Desenha um sprite com o pé em "base", ampliado (pixel art). Devolve false se não houver arte.
+static func sprite(ci: CanvasItem, caminho: String, base: Vector2, escala := 2.0, mod := Color.WHITE, espelhar := false) -> bool:
+	var t := tex(caminho)
+	if t == null:
+		return false
+	var tam := t.get_size() * escala
+	if espelhar:
+		ci.draw_set_transform(base, 0, Vector2(-1, 1))
+		ci.draw_texture_rect(t, Rect2(Vector2(-tam.x / 2.0, -tam.y), tam), false, mod)
+		ci.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+	else:
+		ci.draw_texture_rect(t, Rect2(base - Vector2(tam.x / 2.0, tam.y), tam), false, mod)
+	return true
+
+static func textura_item(id: String) -> Texture2D:
+	var t := tex("itens/%s_%d" % [id, Jogo.nivel_de(id)])
+	if t == null:
+		t = tex("itens/" + id)
+	if t == null:
+		t = tex("objetos/" + id)
+	return t
+
 static func _escuro(c: Color, f := 0.7) -> Color:
 	return Color(c.r * f, c.g * f, c.b * f, c.a)
 
@@ -16,6 +47,17 @@ static func icone(ci: CanvasItem, id: String, r: Rect2, origem := "") -> void:
 		cor = cor.lerp(Dados.item(origem).cor, 0.6)
 	var c := r.get_center()
 	var s: float = min(r.size.x, r.size.y) / 2.0
+	var t := textura_item(id)
+	if t != null:
+		var tt := t.get_size()
+		var esc: float = min(r.size.x / tt.x, r.size.y / tt.y)
+		if esc >= 2.0:
+			esc = floorf(esc)
+		var mod := Color.WHITE
+		if origem != "" and (id == "geleia" or id == "suco" or id == "licor" or id == "conserva" or id == "mel"):
+			mod = Color.WHITE.lerp(Dados.item(origem).cor, 0.45) * 1.15
+		ci.draw_texture_rect(t, Rect2(c - tt * esc / 2.0, tt * esc), false, mod)
+		return
 	match String(d.forma):
 		"ferramenta":
 			ferramenta(ci, id, r)
@@ -176,6 +218,18 @@ static func ferramenta(ci: CanvasItem, id: String, r: Rect2) -> void:
 ## Planta no solo; base = ponto no chão (centro embaixo).
 static func cultura(ci: CanvasItem, base: Vector2, cult: Dictionary) -> void:
 	var dados: Dictionary = Dados.culturas[cult.id]
+	if cult.get("morta", false) and sprite(ci, "culturas/morta", base + Vector2(0, 2)):
+		return
+	if not cult.get("morta", false):
+		var dias_c := int(cult.dias)
+		var fase_c := 0
+		var soma_c := 0
+		for f in dados.fases:
+			soma_c += int(f)
+			if dias_c >= soma_c:
+				fase_c += 1
+		if sprite(ci, "culturas/%s_%d" % [cult.id, min(fase_c, 4)], base + Vector2(0, 2)):
+			return
 	if cult.get("morta", false):
 		ci.draw_line(base, base + Vector2(-4, -12), Color("#6a5a3a"), 2)
 		ci.draw_line(base, base + Vector2(5, -10), Color("#6a5a3a"), 2)
@@ -235,6 +289,22 @@ static func cultura(ci: CanvasItem, base: Vector2, cult: Dictionary) -> void:
 ## Objetos colocáveis (máquinas, baú...), base = chão.
 static func objeto_colocavel(ci: CanvasItem, tipo: String, base: Vector2, tam := 28.0, pronto := false, trabalhando := false) -> void:
 	var s := tam / 28.0
+	var nome := tipo
+	if trabalhando and (tipo == "fornalha" or tipo == "forno_carvao"):
+		nome += "_on"
+	if tipo == "cocho" and pronto:
+		nome = "cocho_cheio"
+	if tex("objetos/" + nome) != null:
+		var t := tex("objetos/" + nome)
+		var escala := 2.0 * s if tam != 28.0 else 2.0
+		if tam < 28.0:
+			escala = tam / max(t.get_width(), t.get_height())
+		sprite(ci, "objetos/" + nome, base, escala)
+		if pronto and tipo != "cocho" and tipo != "mural":
+			var topo := base + Vector2(0, -t.get_height() * escala - 8)
+			ci.draw_circle(topo, 9, Color(1, 1, 1, 0.92))
+			ci.draw_arc(topo, 9, 0, TAU, 16, Color("#6a4a2a"), 1.5)
+		return
 	match tipo:
 		"bau":
 			ci.draw_rect(Rect2(base + Vector2(-13, -20) * s, Vector2(26, 18) * s), Color("#9a6b3e"))
@@ -334,6 +404,8 @@ static func objeto_colocavel(ci: CanvasItem, tipo: String, base: Vector2, tam :=
 
 ## Animal visto de lado; olhando para a direita se dir > 0.
 static func animal(ci: CanvasItem, tipo: String, base: Vector2, dir := 1.0, quadro := 0.0) -> void:
+	if sprite(ci, "animais/%s_%d" % [tipo, int(quadro / 2.0) % 2], base, 2.0, Color.WHITE, dir < 0):
+		return
 	var d: Dictionary = Dados.animais.get(tipo, {"cor": Color.WHITE})
 	var cor: Color = d.cor
 	var pulo := absf(sin(quadro)) * 1.5
@@ -367,6 +439,9 @@ static func animal(ci: CanvasItem, tipo: String, base: Vector2, dir := 1.0, quad
 ## Monstros da mina.
 static func monstro(ci: CanvasItem, tipo: String, base: Vector2, quadro: float, ferido: bool) -> void:
 	var piscar := Color(1, 0.4, 0.4) if ferido else Color.WHITE
+	var desloc := Vector2(0, -6 - sin(quadro * 6.0) * 3.0) if tipo == "morcego" else Vector2.ZERO
+	if sprite(ci, "monstros/%s_%d" % [tipo, int(quadro * 4.0) % 2], base + desloc, 2.0, piscar):
+		return
 	match tipo:
 		"gosma", "gosma_azul", "gosma_roxa":
 			var cor := Color("#5fc24a")

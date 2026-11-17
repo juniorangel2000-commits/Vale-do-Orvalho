@@ -40,6 +40,12 @@ func _process(delta: float) -> void:
 		if o.has("saida"):
 			queue_redraw()
 
+func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var o := mapa.objeto(celula)
+	if not o.is_empty() and (ARTES.has(String(o.tipo)) or String(o.tipo).begins_with("deco")):
+		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+
 func tremer() -> void:
 	tremor = 0.25
 
@@ -76,6 +82,13 @@ func _draw() -> void:
 		return
 	match tipo:
 		"mato":
+			var tinta := Color.WHITE
+			if Jogo.estacao == 2:
+				tinta = Color(1.3, 0.95, 0.5)
+			elif Jogo.estacao == 3:
+				tinta = Color(1.1, 1.15, 1.2)
+			if Desenho.sprite(self, "objetos/mato_%d" % (abs(celula.x * 3 + celula.y) % 3), desloc, 2.0, tinta):
+				return
 			var verde := Color("#6a9a3a") if Jogo.estacao != 2 else Color("#a88a3a")
 			if Jogo.estacao == 3:
 				verde = Color("#9aa89a")
@@ -88,7 +101,7 @@ func _draw() -> void:
 				draw_circle(p + Vector2(-1, -1), 3, Color("#b8b8b0"))
 		"forragem":
 			draw_circle(Vector2(0, -2), 9, Color(0, 0, 0, 0.18))
-			Desenho.icone(self, String(o.item), Rect2(Vector2(-11, -24), Vector2(22, 22)))
+			Desenho.icone(self, String(o.item), Rect2(Vector2(-16, -30), Vector2(32, 32)))
 		"caixa_envio", "bau", "espantalho", "aspersor", "aspersor_bom", "cerca", "tocha", "barril", "conserveiro", "fornalha",\
 				"forno_carvao", "prensa_queijo", "batedeira", "tear", "caixa_abelha", "fogao", "cama", "cocho", "mural", "colecoes",\
 				"escada_mina", "elevador", "mesa":
@@ -101,8 +114,12 @@ func _draw() -> void:
 				pronto = int(Jogo.construcao_por_id(mapa.construcao_id).get("cocho", 0)) > 0
 			if tipo == "mural":
 				pronto = not Jogo.pedido.is_empty()
-			Desenho.objeto_colocavel(self, tipo, desloc, 40.0 if tipo == "caixa_envio" else 28.0, pronto, trabalhando)
+			Desenho.objeto_colocavel(self, tipo, desloc, 28.0, pronto, trabalhando)
 			if pronto and o.has("saida"):
-				Desenho.icone(self, String(o.saida), Rect2(Vector2(-6, -44), Vector2(12, 12)), String(o.get("origem", "")))
+				var alt := 44.0
+				var tt := Desenho.tex("objetos/" + tipo)
+				if tt:
+					alt = tt.get_height() * 2.0 + 8.0
+				Desenho.icone(self, String(o.saida), Rect2(Vector2(-8, -alt - 8), Vector2(16, 16)), String(o.get("origem", "")))
 		_:
 			draw_rect(Rect2(-8, -16, 16, 16), Color.MAGENTA)

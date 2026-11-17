@@ -134,7 +134,7 @@ func _mensagem(texto: String) -> void:
 	while _mensagens.get_child_count() > 6:
 		_mensagens.get_child(0).queue_free()
 		_mensagens.remove_child(_mensagens.get_child(0))
-	var t := create_tween()
+	var t := l.create_tween()
 	t.tween_interval(4.0)
 	t.tween_property(l, "modulate:a", 0.0, 1.0)
 	t.tween_callback(l.queue_free)

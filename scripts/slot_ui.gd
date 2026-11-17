@@ -11,6 +11,7 @@ var item_fixo := {}   # para mostrar um item que não está numa lista (lojas, r
 var escurecido := false
 
 func _init() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	custom_minimum_size = Vector2(44, 44)
 	tooltip_text = " "
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -32,7 +33,7 @@ func _draw() -> void:
 	var s = conteudo()
 	if s == null:
 		return
-	Desenho.icone(self, String(s.id), r.grow(-7), String(s.get("origem", "")))
+	Desenho.icone(self, String(s.id), r.grow(-4), String(s.get("origem", "")))
 	if escurecido:
 		draw_rect(r.grow(-2), Color(0.2, 0.15, 0.1, 0.55))
 	var q := int(s.get("q", 0))

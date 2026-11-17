@@ -72,6 +72,7 @@ func construir(dados_extra := {}) -> void:
 	lavoura.set_script(preload("res://scripts/lavoura.gd"))
 	lavoura.set("mapa", self)
 	lavoura.z_index = -10
+	lavoura.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(lavoura)
 	objetos = Node2D.new()
 	objetos.y_sort_enabled = true

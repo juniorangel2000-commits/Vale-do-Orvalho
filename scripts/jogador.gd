@@ -28,6 +28,8 @@ func _ready() -> void:
 	corpo.scale = Vector2(0.3, 0.3)
 	corpo.offset = Vector2(0, -104)
 	corpo.light_mask = 2
+	corpo.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(corpo)
 	corpo.play("parada-south")
 	z_index = 0

@@ -14,10 +14,16 @@ var _nome: Label
 func _ready() -> void:
 	var d: Dictionary = Dados.aldeoes[id]
 	corpo = AnimatedSprite2D.new()
-	corpo.sprite_frames = Jogador._quadros()
-	corpo.scale = Vector2(0.29, 0.29)
-	corpo.offset = Vector2(0, -104)
-	corpo.modulate = Color.WHITE.lerp(d.cor, 0.8) * 1.25
+	var folha := Desenho.tex("aldeoes/" + id)
+	if folha:
+		corpo.sprite_frames = _quadros_da_folha(folha)
+		corpo.scale = Vector2(0.58, 0.58)
+		corpo.offset = Vector2(0, -52)
+	else:
+		corpo.sprite_frames = Jogador._quadros()
+		corpo.scale = Vector2(0.29, 0.29)
+		corpo.offset = Vector2(0, -104)
+		corpo.modulate = Color.WHITE.lerp(d.cor, 0.8) * 1.25
 	corpo.light_mask = 2
 	add_child(corpo)
 	corpo.play("parada-south")
@@ -30,6 +36,30 @@ func _ready() -> void:
 	_nome.size = Vector2(60, 10)
 	_nome.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(_nome)
+
+static var _cache := {}
+
+func _quadros_da_folha(folha: Texture2D) -> SpriteFrames:
+	if _cache.has(id):
+		return _cache[id]
+	var sf := SpriteFrames.new()
+	sf.remove_animation("default")
+	var ordem := ["south", "north", "east", "west", "south-east", "south-west", "north-east", "north-west"]
+	for li in ordem.size():
+		var d: String = ordem[li]
+		sf.add_animation("parada-" + d)
+		sf.add_animation("andar-" + d)
+		sf.set_animation_speed("andar-" + d, 9.0)
+		for ci in 7:
+			var at := AtlasTexture.new()
+			at.atlas = folha
+			at.region = Rect2(ci * 128, li * 128, 128, 128)
+			if ci == 0:
+				sf.add_frame("parada-" + d, at)
+			else:
+				sf.add_frame("andar-" + d, at)
+	_cache[id] = sf
+	return sf
 
 func celula() -> Vector2i:
 	return Vector2i(floori(position.x / Mapa.T), floori((position.y - 2) / Mapa.T))

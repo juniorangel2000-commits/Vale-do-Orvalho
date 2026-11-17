@@ -22,6 +22,7 @@ var _passeio := Vector2.ZERO
 var _troca := 0.0
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	vida = int(STATUS[tipo].vida * (1.0 + andar / 40.0))
 
 func _process(delta: float) -> void:
