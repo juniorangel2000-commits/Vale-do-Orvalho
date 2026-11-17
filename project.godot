@@ -1,0 +1,22 @@
+; Vale do Orvalho — jogo de fazenda e vida no campo (Godot 4.4).
+config_version=5
+
+[application]
+config/name="Vale do Orvalho"
+run/main_scene="res://cenas/principal.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+
+[autoload]
+Dados="*res://scripts/dados.gd"
+Jogo="*res://scripts/jogo.gd"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=1
