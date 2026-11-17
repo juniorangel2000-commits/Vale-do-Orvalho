@@ -68,6 +68,7 @@ static func _enxada(P: Node, m: Mapa, c: Vector2i) -> void:
 			continue
 		if m.aravel(cc) and m.solo(cc).is_empty() and not m.interativos.has(Jogo.chave(cc)):
 			m.por_solo(cc, {"regado": Jogo.clima == "chuva" and not m.interior})
+	Som.tocar("enxada")
 
 static func capacidade_regador() -> int:
 	return 40 + Jogo.nivel_de("regador") * 20
@@ -76,6 +77,7 @@ static func _regador(P: Node, m: Mapa, c: Vector2i) -> void:
 	if m.agua(c) or m.objeto(c).get("tipo", "") == "poco":
 		Jogo.flags["agua"] = capacidade_regador()
 		Jogo.mensagem.emit("Regador cheio.")
+		Som.tocar("splash")
 		return
 	var agua := int(Jogo.flags.get("agua", 40))
 	if agua <= 0:
@@ -93,6 +95,7 @@ static func _regador(P: Node, m: Mapa, c: Vector2i) -> void:
 	else:
 		for i in range(1, nivel * 2 + 1):
 			celulas.append(c + P.jogador.olhando * i)
+	Som.tocar("regar")
 	var molhou := false
 	for cc in celulas:
 		var so := m.solo(cc)
@@ -112,6 +115,7 @@ static func _machado(P: Node, m: Mapa, c: Vector2i) -> void:
 		return
 	if not _gastar_energia("coleta"):
 		return
+	Som.tocar("machado")
 	var forca := 1 + Jogo.nivel_de("machado")
 	var visual = m.visuais.get(Jogo.chave(c))
 	if visual:
@@ -127,6 +131,7 @@ static func _machado(P: Node, m: Mapa, c: Vector2i) -> void:
 				var tipo: String = o.tipo
 				m.remover_objeto(c)
 				m.por_objeto(c, {"tipo": "toco", "de": tipo})
+				Som.tocar("arvore_cai")
 				Jogo.adicionar("madeira", _rng().randi_range(8, 12), "", 0, true)
 				if _rng().randf() < 0.5:
 					Jogo.adicionar("seiva", _rng().randi_range(1, 3), "", 0, true)
@@ -164,6 +169,7 @@ static func _picareta(P: Node, m: Mapa, c: Vector2i) -> void:
 		return
 	if not _gastar_energia("mineracao"):
 		return
+	Som.tocar("picareta")
 	var forca := 1 + Jogo.nivel_de("picareta")
 	var visual = m.visuais.get(Jogo.chave(c))
 	if visual:
@@ -171,6 +177,7 @@ static func _picareta(P: Node, m: Mapa, c: Vector2i) -> void:
 	match String(o.tipo):
 		"pedra":
 			m.remover_objeto(c)
+			Som.tocar("quebrar")
 			Jogo.adicionar("pedra", _rng().randi_range(1, 2), "", 0, true)
 			if _rng().randf() < 0.05:
 				Jogo.adicionar("minerio_cobre", 1, "", 0, true)
@@ -189,6 +196,7 @@ static func _picareta(P: Node, m: Mapa, c: Vector2i) -> void:
 			if int(o.hp) > 0:
 				return
 			m.remover_objeto(c)
+			Som.tocar("quebrar")
 			if o.tipo == "minerio":
 				var item: String = o.item
 				var qtd := 1 if Dados.item(item).tipo == "gema" else _rng().randi_range(1, 3)
@@ -203,6 +211,7 @@ static func _picareta(P: Node, m: Mapa, c: Vector2i) -> void:
 
 static func _foice(P: Node, m: Mapa, c: Vector2i) -> void:
 	Jogo.cansar(0.3)
+	Som.tocar("foice")
 	var celulas := [c]
 	for d in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
 		if d != -P.jogador.olhando:
@@ -240,6 +249,7 @@ static func _vara(P: Node, m: Mapa, c: Vector2i) -> void:
 				Jogo.mensagem.emit("Você está exausto demais.")
 				return
 			Jogo.cansar(Jogo.custo_energia("pesca", 4.0))
+			Som.tocar("lancar")
 			P.ui.pescar(m.tipo_agua)
 			return
 	Jogo.mensagem.emit("Fique de frente para a água para pescar.")
@@ -268,6 +278,7 @@ static func _plantar(P: Node, m: Mapa, c: Vector2i, semente: String) -> void:
 		Jogo.mensagem.emit("Essa semente não cresce no %s." % Dados.ESTACOES[Jogo.estacao].to_lower())
 		return
 	so.cultura = {"id": cult, "dias": 0}
+	Som.tocar("plantar")
 	Jogo.remover_do_slot(Jogo.slot)
 	m.redesenhar()
 
@@ -294,6 +305,7 @@ static func _colocar(P: Node, m: Mapa, c: Vector2i, id: String) -> void:
 	if id == "caixa_abelha":
 		o.dias = 0
 	m.por_objeto(c, o)
+	Som.tocar("porta", 0.6)
 	Jogo.remover_do_slot(Jogo.slot)
 
 static func _recolher(P: Node, m: Mapa, c: Vector2i) -> void:
@@ -353,6 +365,7 @@ static func colher(P: Node, m: Mapa, c: Vector2i) -> void:
 		Jogo.mensagem.emit("Mochila cheia!")
 		return
 	Jogo.adicionar(produto, qtd, "", q, true)
+	Som.tocar("colher")
 	Jogo.ganhar_xp("cultivo", int(Dados.item(produto).preco / 6.0) + 2)
 	Jogo.somar_stat("colhidos")
 	Jogo.conquistar("primeira_colheita")
@@ -374,6 +387,7 @@ static func _interagir_objeto(P: Node, m: Mapa, c: Vector2i, o: Dictionary) -> b
 			if _rng().randf() < Jogo.nivel_habilidade("coleta") * 0.05:
 				q = 1
 			Jogo.adicionar(item, 1, "", q, true)
+			Som.tocar("pegar")
 			if Dados.item(item).tipo == "forragem":
 				Jogo.ganhar_xp("coleta", 7)
 				if Jogo.nivel_habilidade("coleta") >= 4 and _rng().randf() < 0.2:
@@ -386,6 +400,7 @@ static func _interagir_objeto(P: Node, m: Mapa, c: Vector2i, o: Dictionary) -> b
 				P.ui.abrir_venda()
 				return true
 			Jogo.caixa_envio.append(s.duplicate())
+			Som.tocar("moeda", 0.6)
 			Jogo.inventario[Jogo.slot] = null
 			Jogo.inventario_mudou.emit()
 			Jogo.mensagem.emit("Colocado na caixa: %d %s (vende à noite)" % [int(s.qtd), Dados.nome_item(s.id, String(s.get("origem", "")))])
@@ -430,6 +445,7 @@ static func _interagir_objeto(P: Node, m: Mapa, c: Vector2i, o: Dictionary) -> b
 			m.atualizar_objeto(c)
 			return true
 		"escada_mina":
+			Som.tocar("escada")
 			if bool(o.get("sobe", false)):
 				P.ir_para("montanha", Vector2i(24, 5))
 			else:
@@ -456,6 +472,7 @@ static func _coletar_maquina(m: Mapa, c: Vector2i, o: Dictionary) -> bool:
 	var qtd := int(o.get("qtd_saida", 1))
 	if Jogo.adicionar(saida, qtd, origem, 0, true) > 0:
 		return false
+	Som.tocar("pegar")
 	o.erase("saida")
 	o.erase("origem")
 	o.erase("qtd_saida")
@@ -496,6 +513,7 @@ static func _maquina(P: Node, m: Mapa, c: Vector2i, o: Dictionary) -> void:
 			if bool(regra.get("origem", false)):
 				o.origem = id
 			o.pronto_em = Jogo.minuto_absoluto() + int(regra.min)
+			Som.tocar("clique")
 			m.atualizar_objeto(c)
 			Jogo.somar_stat("processados")
 			return

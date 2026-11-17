@@ -57,15 +57,18 @@ func _process(delta: float) -> void:
 	if para_jogador.length() < 16 and jog.invencivel <= 0:
 		var dano := int(st.dano * (1.0 + andar / 50.0))
 		Jogo.ferir(dano)
+		Som.tocar("dano")
 		jog.invencivel = 1.0
 		jog.mover(-para_jogador.normalized() * 18.0)
 		Jogo.mensagem.emit("-%d de vida" % dano)
 
 func ferir(dano: int, de: Vector2) -> void:
 	vida -= dano
+	Som.tocar("golpe")
 	_ferido = 0.25
 	_empurrao = de * 220.0
 	if vida <= 0:
+		Som.tocar("morreu")
 		principal.monstro_morreu(self)
 		queue_free()
 

@@ -53,6 +53,7 @@ func interagir() -> void:
 				Jogo.cansar(1)
 			return
 		Jogo.mensagem.emit("%s está pronta. Use: %s." % [dados.nome, Dados.nome_item(d.ferramenta)])
+	Som.tocar("galinha" if Dados.animais[dados.tipo].casa == "galinheiro" else "vaca", 0.7)
 	if not bool(dados.get("carinho", false)):
 		dados.carinho = true
 		dados.amizade = min(int(dados.amizade) + 15, 1000)

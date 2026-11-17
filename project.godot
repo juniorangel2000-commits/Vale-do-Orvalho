@@ -9,6 +9,7 @@ config/features=PackedStringArray("4.4", "GL Compatibility")
 [autoload]
 Dados="*res://scripts/dados.gd"
 Jogo="*res://scripts/jogo.gd"
+Som="*res://scripts/som.gd"
 
 [display]
 window/size/viewport_width=1280

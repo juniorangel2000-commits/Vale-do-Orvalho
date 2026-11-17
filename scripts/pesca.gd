@@ -98,10 +98,12 @@ func _process(delta: float) -> void:
 	match fase:
 		"esperando":
 			if _tempo >= _espera:
+				Som.tocar("fisgou", 1.0, false)
 				fase = "fisgou"
 				_tempo = 0.0
 		"fisgou":
 			if _tempo > 0.9:
+				Som.tocar("splash")
 				Jogo.mensagem.emit("O peixe escapou...")
 				queue_free()
 		"lutando":
@@ -129,6 +131,7 @@ func _lutar(delta: float) -> void:
 	if _progresso >= 1.0:
 		_terminar(true)
 	elif _progresso <= 0.0:
+		Som.tocar("splash")
 		Jogo.mensagem.emit("O peixe escapou...")
 		queue_free()
 
@@ -137,6 +140,7 @@ func _terminar(pegou: bool) -> void:
 		var q := 0
 		if _perfeito and _dif > 5:
 			q = 1 if randf() < 0.6 else 2
+		Som.tocar("peixe", 1.0, false)
 		if Jogo.adicionar(_peixe, 1, "", q, true) == 0:
 			if Dados.item(_peixe).tipo == "peixe":
 				Jogo.somar_stat("peixes")

@@ -84,6 +84,8 @@ func _abrir(titulo: String, largura := 640.0, altura := 0.0) -> VBoxContainer:
 	if _janela:
 		_janela.queue_free()
 		_janela = null
+	if _janela == null:
+		Som.tocar("abrir", 0.7)
 	_fundo.visible = true
 	if not Jogo.pausado:
 		Jogo.pausado = true
@@ -108,6 +110,7 @@ func _abrir(titulo: String, largura := 640.0, altura := 0.0) -> VBoxContainer:
 
 func fechar() -> void:
 	if _janela:
+		Som.tocar("fechar", 0.6)
 		_janela.queue_free()
 		_janela = null
 	_fundo.visible = false
@@ -136,6 +139,7 @@ func _botao(texto: String, acao: Callable, ativo := true) -> Button:
 	b.disabled = not ativo
 	b.add_theme_font_size_override("font_size", 14)
 	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(func(): Som.tocar("clique", 0.7))
 	b.pressed.connect(acao)
 	return b
 
@@ -421,6 +425,26 @@ func _aba_opcoes(vb: VBoxContainer) -> void:
 	vb.add_child(_label("Controles:\nWASD ou setas: andar\nClique esquerdo ou Espaço: usar o item da mão\nClique direito ou F: falar, colher, abrir, interagir\n1 a 0, - e =: escolher item (ou roda do mouse)\nE: mochila · Q: comer o item da mão · J: mural de pedidos · K: amizades · Esc: menu", 14))
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 14)
+	vb.add_child(_label("Volume da música", 14))
+	var sm := HSlider.new()
+	sm.min_value = 0.0
+	sm.max_value = 1.0
+	sm.step = 0.05
+	sm.value = Som.vol_musica
+	sm.custom_minimum_size = Vector2(300, 20)
+	sm.value_changed.connect(func(v: float): Som.definir_volumes(v, Som.vol_efeitos))
+	vb.add_child(sm)
+	vb.add_child(_label("Volume dos efeitos", 14))
+	var se := HSlider.new()
+	se.min_value = 0.0
+	se.max_value = 1.0
+	se.step = 0.05
+	se.value = Som.vol_efeitos
+	se.custom_minimum_size = Vector2(300, 20)
+	se.value_changed.connect(func(v: float):
+		Som.definir_volumes(Som.vol_musica, v)
+		Som.tocar("pegar"))
+	vb.add_child(se)
 	hb.add_child(_botao("Voltar ao título", func():
 		confirmar("Voltar ao título? O que aconteceu desde a manhã será perdido.", func():
 			fechar()
@@ -561,6 +585,7 @@ func _comprar(item: String, preco: int, qtd: int, loja: String, aba: String) -> 
 		Jogo.mensagem.emit("Mochila cheia!")
 		return
 	if Jogo.gastar(preco * qtd):
+		Som.tocar("moeda")
 		Jogo.adicionar(item, qtd)
 		if item == "vara_fibra" or item == "espada_aco":
 			var antigo := "vara" if item == "vara_fibra" else "espada"
@@ -574,6 +599,7 @@ func _vender(i: int, qtd: int, loja: String, aba: String) -> void:
 		return
 	var n: int = min(qtd, int(s.qtd))
 	Jogo.ganhar(Dados.preco_venda(s.id, String(s.get("origem", "")), int(s.get("q", 0))) * n)
+	Som.tocar("moeda")
 	Jogo.remover_do_slot(i, n)
 	abrir_loja(loja, aba)
 
@@ -871,6 +897,7 @@ func mostrar_relatorio(rel: Dictionary, depois: Callable) -> void:
 		for v in rel.vendas:
 			lista.add_child(_label("%s x%d — %d moedas" % [v[0], int(v[1]), int(v[2])], 14))
 		vb.add_child(_label("Total: %d moedas" % int(rel.total), 17, COR_TITULO))
+		Som.tocar("moeda", 1.0, false)
 	for e in rel.eventos:
 		vb.add_child(_label("• " + String(e), 14))
 	vb.add_child(_label("Bom dia! %s. Jogo salvo." % Jogo.texto_data(), 15))

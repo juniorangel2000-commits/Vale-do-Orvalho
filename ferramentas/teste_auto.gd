@@ -244,6 +244,17 @@ func _ready() -> void:
 	_checar(Jogo.dinheiro == dinheiro_salvo and Jogo.contar("madeira") == inv, "save mantém dados")
 	P.ir_para("fazenda", Vector2i(11, 9))
 	await _quadros(3)
+	# som
+	_checar(Som.call("_carregar", "res://som/musica/primavera.ogg") != null, "música carrega")
+	_checar(Som.call("_carregar", "res://som/efeitos/enxada.wav") != null, "efeito carrega")
+	for nome in ["enxada", "regar", "machado", "picareta", "colher", "moeda", "peixe", "nivel", "chuva"]:
+		_checar(ResourceLoader.exists("res://som/efeitos/%s.wav" % nome), "som " + nome)
+	# artes
+	for id in Dados.itens:
+		if Desenho.textura_item(id) == null:
+			_checar(false, "arte do item " + id)
+	for id in Dados.aldeoes:
+		_checar(Desenho.tex("aldeoes/" + id) != null, "arte de " + id)
 	print("=== TESTE: %d falha(s) ===" % erros)
 	get_tree().quit(1 if erros > 0 else 0)
 

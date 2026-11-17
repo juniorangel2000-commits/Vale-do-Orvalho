@@ -117,6 +117,8 @@ func ir_para(destino: String, entrada: Vector2i, extra := {}) -> void:
 	mapa = Mapa.new(destino)
 	mundo.add_child(mapa)
 	mapa.construir(extra)
+	if _mapa_atual != "" and _mapa_atual != destino:
+		Som.tocar("porta", 0.7)
 	_mapa_atual = destino
 	jogador.mapa = mapa
 	mapa.objetos.add_child(jogador)
@@ -141,6 +143,24 @@ func ir_para(destino: String, entrada: Vector2i, extra := {}) -> void:
 	_criar_animais()
 	_criar_monstros()
 	hud.call("atualizar")
+	_atualizar_musica()
+
+func _atualizar_musica() -> void:
+	if mapa == null:
+		return
+	var h := Jogo.hora()
+	var nome: String = ["primavera", "verao", "outono", "inverno"][Jogo.estacao]
+	if mapa.andar > 0:
+		nome = "mina"
+	elif mapa.interior:
+		nome = "casa"
+	elif mapa.nome == "vila" and not Jogo.festival_hoje().is_empty() and h >= 9 and h < 14:
+		nome = "festa"
+	elif Jogo.clima == "chuva":
+		nome = "casa"
+	Som.musica(nome)
+	Som.abafar(h >= 20 or Jogo.clima == "chuva")
+	Som.chuva(Jogo.clima == "chuva" and not mapa.interior and mapa.andar == 0)
 
 func _montar_astar() -> void:
 	astar = AStarGrid2D.new()
@@ -267,6 +287,7 @@ func _comer() -> void:
 		Jogo.recuperar(float(d.energia) * (1.0 + int(s.get("q", 0)) * 0.4))
 		Jogo.curar(int(d.get("vida", int(d.energia) / 2)))
 		Jogo.remover_do_slot(Jogo.slot)
+		Som.tocar("comer")
 		Jogo.mensagem.emit("Que delícia!"))
 
 # ---------------------------------------------------------------- luz e clima
@@ -293,6 +314,8 @@ func _ao_mudar_hora() -> void:
 		return
 	_atualizar_npcs(false)
 	hud.call("atualizar")
+	if Jogo.minutos % 60 == 0:
+		_atualizar_musica()
 	if Jogo.minutos == 1440:
 		Jogo.mensagem.emit("Já é meia-noite. Melhor ir dormir!")
 	if Jogo.minutos == 1500:
@@ -302,6 +325,7 @@ func _ao_mudar_hora() -> void:
 
 func dormir() -> void:
 	Jogo.pausado = true
+	Som.tocar("dormir", 1.0, false)
 	var rel := Jogo.passar_dia("")
 	hud.call("atualizar")
 	ui.call("mostrar_relatorio", rel, _comecar_dia)
@@ -541,6 +565,8 @@ func atacar(arma: String) -> void:
 	dano += int(Jogo.nivel_habilidade("combate") / 2.0)
 	if arma != "foice":
 		Jogo.cansar(0.5)
+	if arma != "foice":
+		Som.tocar("foice", 0.8)
 	var ponto := jogador.global_position + Vector2(jogador.olhando) * 22.0 + Vector2(0, -8)
 	for m in monstros.duplicate():
 		if is_instance_valid(m) and m.global_position.distance_to(ponto) < 30:

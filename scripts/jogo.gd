@@ -351,6 +351,7 @@ func ganhar_xp(h: String, valor: int) -> void:
 	var depois := nivel_habilidade(h)
 	if depois > antes:
 		mensagem.emit("%s subiu para o nível %d!" % [Dados.NOMES_HABILIDADES[h], depois])
+		Som.tocar("nivel", 1.0, false)
 		_liberar_receitas()
 		if h == "combate":
 			vida_max = 100 + depois * 5
@@ -418,6 +419,7 @@ func conquistar(id: String) -> void:
 	if id in conquistas or not Dados.conquistas.has(id):
 		return
 	conquistas.append(id)
+	Som.tocar("nivel", 0.8, false)
 	mensagem.emit("Conquista: %s!" % Dados.conquistas[id].nome)
 
 func _verificar_conquistas() -> void:
