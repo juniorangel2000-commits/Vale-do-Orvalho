@@ -27,8 +27,8 @@ func _draw() -> void:
 		cor = Color(1.1, 1.2, 1.35)
 	for c in _celulas:
 		var r := Rect2(c.x * T, c.y * T, T, T)
-		var ox := (c.x * T + desloc) % 96
-		var oy := (c.y * T) % 96
+		var ox: int = (c.x * T + desloc) % 96
+		var oy: int = (c.y * T) % 96
 		var largura: int = min(T, 96 - ox)
 		draw_texture_rect_region(tex, Rect2(r.position, Vector2(largura, T)), Rect2(ox, oy, largura, T), cor)
 		if largura < T:

@@ -620,6 +620,10 @@ func _espalhar_objetos() -> void:
 		2: ["cogumelo", "avela", "amora"],
 		3: ["raiz_inverno", "cristal_gelo", "raiz_inverno"],
 	}
+	for nome in mapas:
+		for k in mapas[nome].objetos:
+			if mapas[nome].objetos[k].tipo == "arbusto":
+				mapas[nome].objetos[k].colhido_hoje = false
 	for nome in ["floresta", "vila", "montanha"]:
 		var est: Dictionary = estado_mapa(nome)
 		if not est.iniciado:

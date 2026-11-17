@@ -82,6 +82,10 @@ func _draw() -> void:
 			for i in 5:
 				var x := -10.0 + i * 5.0
 				draw_colored_polygon(PackedVector2Array([Vector2(x - 3, 0) + desloc, Vector2(x + (i % 2) * 2 - 1, -14 - (i % 3) * 3) + desloc, Vector2(x + 3, 0) + desloc]), verde)
+		"caminho":
+			for p in [Vector2(-8, -8), Vector2(6, -12), Vector2(-2, -20), Vector2(9, -24), Vector2(-10, -24)]:
+				draw_circle(p, 5, Color("#9a9a94"))
+				draw_circle(p + Vector2(-1, -1), 3, Color("#b8b8b0"))
 		"forragem":
 			draw_circle(Vector2(0, -2), 9, Color(0, 0, 0, 0.18))
 			Desenho.icone(self, String(o.item), Rect2(Vector2(-11, -24), Vector2(22, 22)))
@@ -94,7 +98,7 @@ func _draw() -> void:
 				pronto = Jogo.minuto_absoluto() >= int(o.get("pronto_em", 0))
 				trabalhando = not pronto
 			if tipo == "cocho":
-				pronto = int(mapa.est.get("cocho", 0)) > 0
+				pronto = int(Jogo.construcao_por_id(mapa.construcao_id).get("cocho", 0)) > 0
 			if tipo == "mural":
 				pronto = not Jogo.pedido.is_empty()
 			Desenho.objeto_colocavel(self, tipo, desloc, 28.0, pronto, trabalhando)

@@ -24,7 +24,9 @@ var escuro := false
 var andar := 0
 var saidas: Array = []
 var interativos := {}
-var construcoes_fixas: Array = []   # {rect: Rect2i, textura, escala, cor, rotulo, porta}
+var construcoes_fixas: Array = []   # {rect: Rect2i, textura, largura, cor, rotulo}
+var decoracoes: Array = []          # {c: Vector2i, arte, largura, cor}: árvores de borda, flores...
+var construcao_id := 0              # interiores de galinheiro/estábulo
 var est: Dictionary = {}
 var musica := ""
 
@@ -76,6 +78,8 @@ func construir(dados_extra := {}) -> void:
 	add_child(objetos)
 	for b in construcoes_fixas:
 		_criar_construcao_visual(b)
+	for d in decoracoes:
+		_criar_decoracao(d)
 	for k in est.objetos.keys():
 		_criar_visual(Jogo.celula(k))
 
@@ -233,6 +237,23 @@ func _criar_construcao_visual(b: Dictionary) -> void:
 		placa.position = Vector2(r.position.x * T, (r.position.y + r.size.y) * T + 2)
 		placa.z_index = 5
 		add_child(placa)
+
+func _criar_decoracao(d: Dictionary) -> void:
+	var s := Sprite2D.new()
+	var tex := ObjetoVisual.textura(String(d.arte))
+	s.texture = tex
+	var escala := float(d.largura) / tex.get_width()
+	s.scale = Vector2(escala, escala)
+	s.offset = Vector2(0, -tex.get_height() / 2.0)
+	var c: Vector2i = d.c
+	s.position = Vector2(c.x * T + T / 2.0, c.y * T + T - 2)
+	if d.has("cor"):
+		s.modulate = d.cor
+	elif String(d.arte).begins_with("asset-tree") and Jogo.estacao == 2:
+		s.modulate = Color(1.35, 0.85, 0.5)
+	elif Jogo.estacao == 3 and not interior:
+		s.modulate = Color(1.12, 1.15, 1.25)
+	objetos.add_child(s)
 
 ## Áreas onde nascem forrageiros (guardadas no estado para o Jogo usar à noite).
 func marcar_area_forragem(celulas: Array) -> void:
